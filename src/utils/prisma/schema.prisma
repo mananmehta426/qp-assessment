@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  userId    Int      @id @default(autoincrement())
+  password  String
+  email     String   @unique
+  salt      String
+  role      Role
+  orders    Order[]
+  createdAt DateTime @default(now()) @updatedAt
+  deletedAt DateTime?
+  @@index([createdAt])
+}
+
+model GroceryItem {
+  itemId      Int      @id @default(autoincrement())
+  itemName    String
+  price       Float
+  quantity    Int
+  description String
+  orderDetails OrderDetail[]
+  createdAt   DateTime @default(now()) @updatedAt
+  deletedAt   DateTime?
+  @@index([createdAt])
+}
+
+model Order {
+  orderId      Int         @id @default(autoincrement())
+  userId       Int
+  totalAmount  Float
+  user         User        @relation(fields: [userId], references: [userId])
+  orderDetails OrderDetail[]
+  createdAt    DateTime    @default(now()) @updatedAt
+  deletedAt    DateTime?
+  @@index([createdAt])
+}
+
+model OrderDetail {
+  orderId   Int
+  itemId    Int
+  quantity  Int
+  order     Order      @relation(fields: [orderId], references: [orderId])
+  item      GroceryItem @relation(fields: [itemId], references: [itemId])
+  createdAt DateTime @default(now()) @updatedAt
+  @@id([orderId, itemId])
+}
